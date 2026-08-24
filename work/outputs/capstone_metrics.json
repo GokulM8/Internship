@@ -1,0 +1,64 @@
+{
+  "lane": "Content Refresh / Opportunity Scoring",
+  "label": "is_declining_forward (March -> April click decline)",
+  "split": "GroupShuffleSplit by client_hash_id, test_size=0.3",
+  "test_n": 49823,
+  "results": [
+    {
+      "system": "Baseline (Week-4 rule)",
+      "roc_auc": 0.6867919478363198,
+      "precision_at_10": 0.7
+    },
+    {
+      "system": "Model (Random Forest)",
+      "roc_auc": 0.9546031666204536,
+      "precision_at_10": 1.0
+    }
+  ],
+  "split_audit": [
+    {
+      "setup": "Naive random split",
+      "roc_auc": 0.9646503957755265
+    },
+    {
+      "setup": "Grouped-by-client split (used above)",
+      "roc_auc": 0.9546031666204536
+    },
+    {
+      "setup": "Grouped split + march_total_clicks leak",
+      "roc_auc": 0.9686820274471705
+    }
+  ],
+  "permutation_importance": [
+    {
+      "feature": "avg_ctr",
+      "importance_mean": 0.1946457198160045,
+      "importance_std": 0.0016327635163310896
+    },
+    {
+      "feature": "avg_position",
+      "importance_mean": 0.0017818865710190423,
+      "importance_std": 0.0005096741161484577
+    },
+    {
+      "feature": "engagement_rate",
+      "importance_mean": 4.8112379773535e-06,
+      "importance_std": 0.00010519610039583905
+    },
+    {
+      "feature": "ai_search_share",
+      "importance_mean": -7.342923218962017e-05,
+      "importance_std": 7.085321381925812e-05
+    },
+    {
+      "feature": "total_impressions",
+      "importance_mean": -0.00043117001248533236,
+      "importance_std": 0.0005228300732723798
+    }
+  ],
+  "archetype_counts": {
+    "Low-Volume / Low-Confidence": 154699,
+    "Stable / Performing": 107900,
+    "Declining / High-Volume": 68837
+  }
+}
