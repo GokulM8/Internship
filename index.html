@@ -3,324 +3,1418 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Content Refresh Prioritization: Predicting Forward Search Decline from March-Only Signals">
+
+  <meta
+    name="description"
+    content="Content Refresh Prioritization: Predicting Forward Search Decline from March-Only Signals"
+  >
+
   <title>Content Refresh Prioritization — FlyRank ML-11</title>
+
   <link rel="stylesheet" href="style.css">
+
   <style>
     :root{
-      --bg:#0b1020; --panel:#11182b; --panel2:#0e1526; --text:#eef2ff;
-      --muted:#9ca8c7; --line:#25304a; --accent:#6ea8fe; --accent2:#8b5cf6;
-      --good:#43d19e; --warn:#f5b942; --danger:#ff7a90; --max:1120px;
+      --bg:#0b1020;
+      --panel:#11182b;
+      --panel2:#0e1526;
+      --text:#eef2ff;
+      --muted:#9ca8c7;
+      --line:#25304a;
+      --accent:#6ea8fe;
+      --accent2:#8b5cf6;
+      --good:#43d19e;
+      --warn:#f5b942;
+      --danger:#ff7a90;
+      --max:1120px;
     }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;background:linear-gradient(180deg,#080d19 0%,#0b1020 45%,#0d1324 100%);
-      color:var(--text);font:16px/1.7 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    a{color:var(--accent);text-decoration:none}
-    a:hover{text-decoration:underline}
-    .wrap{max-width:var(--max);margin:auto;padding:0 24px}
-    .topbar{position:sticky;top:0;z-index:20;background:rgba(8,13,25,.82);backdrop-filter:blur(16px);
-      border-bottom:1px solid rgba(255,255,255,.07)}
-    .nav{height:64px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-    .brand{font-weight:800;letter-spacing:.02em}.brand span{color:var(--accent)}
-    .navlinks{display:flex;gap:18px;font-size:14px;color:var(--muted);overflow:auto}
-    .navlinks a{color:inherit;white-space:nowrap}
-    .hero{padding:88px 0 70px;border-bottom:1px solid var(--line)}
-    .eyebrow{display:inline-flex;gap:8px;align-items:center;color:#b9c7e8;font-size:13px;font-weight:700;
-      letter-spacing:.11em;text-transform:uppercase}
-    .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 18px rgba(67,209,158,.55)}
-    h1{font-size:clamp(42px,6vw,72px);line-height:1.02;letter-spacing:-.045em;max-width:950px;margin:22px 0}
-    .dek{font-size:20px;line-height:1.65;color:#b8c3dc;max-width:850px}
-    .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-    .pill{border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:999px;padding:7px 12px;
-      color:#cbd5ee;font-size:13px}
-    .hero-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:28px;align-items:start}
-    .abstract{background:linear-gradient(145deg,rgba(110,168,254,.12),rgba(139,92,246,.07));
-      border:1px solid #2c3c62;border-radius:20px;padding:24px}
-    .abstract h2{margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:.1em;color:#9eb7ef}
-    section{padding:70px 0;border-bottom:1px solid var(--line)}
-    .section-head{display:grid;grid-template-columns:230px 1fr;gap:40px;margin-bottom:30px}
-    .section-no{font-size:13px;color:#7181a8;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-    h2{font-size:34px;line-height:1.15;letter-spacing:-.025em;margin:0}
-    h3{font-size:21px;margin:28px 0 10px}
-    p{color:#bdc7dd}
-    .lead{font-size:19px;color:#d7def0}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-    .card{background:rgba(17,24,43,.78);border:1px solid var(--line);border-radius:18px;padding:22px}
-    .card strong{display:block;font-size:25px;color:#fff;margin-bottom:3px}
-    .card small{color:var(--muted)}
-    table{width:100%;border-collapse:collapse;margin:22px 0;background:rgba(17,24,43,.55);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-    th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left}
-    th{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:#9eb0d6;background:rgba(255,255,255,.035)}
-    td{color:#d4dbee} tr:last-child td{border-bottom:0}
-    .metric{font-size:34px;font-weight:850;letter-spacing:-.04em}
-    .metric-label{color:var(--muted);font-size:13px}
-    .winner{border-color:#365d9b;box-shadow:0 0 0 1px rgba(110,168,254,.08) inset}
-    figure{margin:28px 0;padding:16px;background:#0a0f1d;border:1px solid var(--line);border-radius:18px}
-    figure img{display:block;width:100%;height:auto;border-radius:10px;background:#fff}
-    figcaption{padding:12px 4px 2px;color:#8997b7;font-size:13px}
-    .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-    .callout{border-left:3px solid var(--accent);padding:5px 0 5px 18px;background:rgba(110,168,254,.045)}
-    .callout.warn{border-left-color:var(--warn)}
-    ul{color:#bdc7dd;padding-left:22px}
-    li{margin:8px 0}
-    code{background:#090e1a;border:1px solid #202b43;padding:2px 6px;border-radius:6px;color:#c9d7fa}
-    pre{background:#080d18;border:1px solid var(--line);padding:18px;border-radius:14px;overflow:auto;color:#cbd6ef}
-    .rank{display:grid;grid-template-columns:54px 1fr auto;gap:18px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
-    .rank:last-child{border-bottom:0}.rank-num{font-size:24px;font-weight:850;color:#7188ba}.rank h3{margin:0}
-    .tag{font-size:12px;font-weight:800;letter-spacing:.06em;padding:6px 9px;border-radius:999px;background:#17233b;color:#bcd1ff}
-    .footer{padding:50px 0 80px;color:#7f8eaf}.footer strong{color:#dbe4fb}
+
+    *{
+      box-sizing:border-box;
+    }
+
+    html{
+      scroll-behavior:smooth;
+    }
+
+    body{
+      margin:0;
+      background:
+        linear-gradient(
+          180deg,
+          #080d19 0%,
+          #0b1020 45%,
+          #0d1324 100%
+        );
+      color:var(--text);
+      font:
+        16px/1.7
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    a{
+      color:var(--accent);
+      text-decoration:none;
+    }
+
+    a:hover{
+      text-decoration:underline;
+    }
+
+    .wrap{
+      max-width:var(--max);
+      margin:auto;
+      padding:0 24px;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:rgba(8,13,25,.82);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+
+    .nav{
+      height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+    }
+
+    .brand{
+      font-weight:800;
+      letter-spacing:.02em;
+    }
+
+    .brand span{
+      color:var(--accent);
+    }
+
+    .navlinks{
+      display:flex;
+      gap:18px;
+      font-size:14px;
+      color:var(--muted);
+      overflow:auto;
+    }
+
+    .navlinks a{
+      color:inherit;
+      white-space:nowrap;
+    }
+
+    .hero{
+      padding:88px 0 70px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      color:#b9c7e8;
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:.11em;
+      text-transform:uppercase;
+    }
+
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--good);
+      box-shadow:0 0 18px rgba(67,209,158,.55);
+    }
+
+    h1{
+      font-size:clamp(42px,6vw,72px);
+      line-height:1.02;
+      letter-spacing:-.045em;
+      max-width:950px;
+      margin:22px 0;
+    }
+
+    .dek{
+      font-size:20px;
+      line-height:1.65;
+      color:#b8c3dc;
+      max-width:850px;
+    }
+
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:28px;
+    }
+
+    .pill{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.035);
+      border-radius:999px;
+      padding:7px 12px;
+      color:#cbd5ee;
+      font-size:13px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.35fr .65fr;
+      gap:28px;
+      align-items:start;
+    }
+
+    .abstract{
+      background:
+        linear-gradient(
+          145deg,
+          rgba(110,168,254,.12),
+          rgba(139,92,246,.07)
+        );
+      border:1px solid #2c3c62;
+      border-radius:20px;
+      padding:24px;
+    }
+
+    .abstract h2{
+      margin-top:0;
+      font-size:14px;
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      color:#9eb7ef;
+    }
+
+    section{
+      padding:70px 0;
+      border-bottom:1px solid var(--line);
+    }
+
+    .section-head{
+      display:grid;
+      grid-template-columns:230px 1fr;
+      gap:40px;
+      margin-bottom:30px;
+    }
+
+    .section-no{
+      font-size:13px;
+      color:#7181a8;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    h2{
+      font-size:34px;
+      line-height:1.15;
+      letter-spacing:-.025em;
+      margin:0;
+    }
+
+    h3{
+      font-size:21px;
+      margin:28px 0 10px;
+    }
+
+    p{
+      color:#bdc7dd;
+    }
+
+    .lead{
+      font-size:19px;
+      color:#d7def0;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+
+    .card{
+      background:rgba(17,24,43,.78);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:22px;
+    }
+
+    .card strong{
+      display:block;
+      font-size:25px;
+      color:#fff;
+      margin-bottom:3px;
+    }
+
+    .card small{
+      color:var(--muted);
+    }
+
+    .artifact-link{
+      display:block;
+      padding:8px 0;
+      font-size:14px;
+    }
+
+    .artifact-link:hover{
+      transform:translateX(2px);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:22px 0;
+      background:rgba(17,24,43,.55);
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    th,
+    td{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+    }
+
+    th{
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      color:#9eb0d6;
+      background:rgba(255,255,255,.035);
+    }
+
+    td{
+      color:#d4dbee;
+    }
+
+    tr:last-child td{
+      border-bottom:0;
+    }
+
+    .metric{
+      font-size:34px;
+      font-weight:850;
+      letter-spacing:-.04em;
+    }
+
+    .metric-label{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .winner{
+      border-color:#365d9b;
+      box-shadow:0 0 0 1px rgba(110,168,254,.08) inset;
+    }
+
+    figure{
+      margin:28px 0;
+      padding:16px;
+      background:#0a0f1d;
+      border:1px solid var(--line);
+      border-radius:18px;
+    }
+
+    figure img{
+      display:block;
+      width:100%;
+      height:auto;
+      border-radius:10px;
+      background:#fff;
+    }
+
+    figcaption{
+      padding:12px 4px 2px;
+      color:#8997b7;
+      font-size:13px;
+    }
+
+    .two{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:22px;
+    }
+
+    .callout{
+      border-left:3px solid var(--accent);
+      padding:5px 0 5px 18px;
+      background:rgba(110,168,254,.045);
+    }
+
+    .callout.warn{
+      border-left-color:var(--warn);
+    }
+
+    ul{
+      color:#bdc7dd;
+      padding-left:22px;
+    }
+
+    li{
+      margin:8px 0;
+    }
+
+    code{
+      background:#090e1a;
+      border:1px solid #202b43;
+      padding:2px 6px;
+      border-radius:6px;
+      color:#c9d7fa;
+    }
+
+    pre{
+      background:#080d18;
+      border:1px solid var(--line);
+      padding:18px;
+      border-radius:14px;
+      overflow:auto;
+      color:#cbd6ef;
+    }
+
+    .rank{
+      display:grid;
+      grid-template-columns:54px 1fr auto;
+      gap:18px;
+      align-items:center;
+      padding:18px 0;
+      border-bottom:1px solid var(--line);
+    }
+
+    .rank:last-child{
+      border-bottom:0;
+    }
+
+    .rank-num{
+      font-size:24px;
+      font-weight:850;
+      color:#7188ba;
+    }
+
+    .rank h3{
+      margin:0;
+    }
+
+    .tag{
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.06em;
+      padding:6px 9px;
+      border-radius:999px;
+      background:#17233b;
+      color:#bcd1ff;
+    }
+
+    .footer{
+      padding:50px 0 80px;
+      color:#7f8eaf;
+    }
+
+    .footer strong{
+      color:#dbe4fb;
+    }
+
     @media(max-width:800px){
-      .hero-grid,.section-head,.two,.grid{grid-template-columns:1fr}
-      .section-head{gap:12px}.navlinks{display:none}h2{font-size:29px}
-      .rank{grid-template-columns:42px 1fr}.rank .tag{grid-column:2;justify-self:start}
+
+      .hero-grid,
+      .section-head,
+      .two,
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .section-head{
+        gap:12px;
+      }
+
+      .navlinks{
+        display:none;
+      }
+
+      h2{
+        font-size:29px;
+      }
+
+      .rank{
+        grid-template-columns:42px 1fr;
+      }
+
+      .rank .tag{
+        grid-column:2;
+        justify-self:start;
+      }
     }
   </style>
 </head>
+
 <body>
-  <header class="topbar">
-    <div class="wrap nav">
-      <div class="brand">ML-11 <span>Research Artifact</span></div>
-      <nav class="navlinks" aria-label="Sections">
-        <a href="#question">Question</a><a href="#data">Data</a><a href="#method">Method</a>
-        <a href="#results">Results</a><a href="#limitations">Limitations</a><a href="#recommendations">Recommendations</a>
-        <a href="#reproducibility">Reproducibility</a>
-      </nav>
+
+<header class="topbar">
+  <div class="wrap nav">
+
+    <div class="brand">
+      ML-11 <span>Research Artifact</span>
     </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <div class="wrap hero-grid">
-        <div>
-          <div class="eyebrow"><span class="dot"></span> FlyRank Machine Learning Internship · ML-11</div>
-          <h1>Content Refresh Prioritization: Predicting Forward Search Decline from March-Only Signals</h1>
-          <p class="dek">A public-safe, decision-support study asking whether signals available at the end of March can help identify webpages whose organic clicks decline in April.</p>
-          <div class="meta">
-            <span class="pill">March → April 2026</span>
-            <span class="pill">Binary classification</span>
-            <span class="pill">Client-grouped validation</span>
-            <span class="pill">Human review required</span>
-          </div>
-        </div>
-        <aside class="abstract">
-          <h2>Abstract</h2>
-          <p>This study investigates whether March-only search and engagement signals can identify webpages likely to experience a forward decline in organic clicks, supporting human-reviewed content refresh prioritization. A Random Forest classifier using five March 2026 features was evaluated against a fixed Week-4 rule-based baseline on a client-grouped held-out split. On this March-to-April slice, the model achieved a ROC-AUC of 0.953919 and Precision@10 of 1.000, compared with 0.686792 and 0.700 for the baseline. Validation audits showed a higher ROC-AUC of approximately 0.964 under a naive random split and approximately 0.968 when March total clicks was deliberately added as a leaky feature, reinforcing the need for grouped validation and careful feature design. The resulting ranking is a directional decision-support signal for human review, not evidence of causality, guaranteed traffic recovery, or an automated content-editing system.</p>
-        </aside>
+    <nav class="navlinks" aria-label="Sections">
+      <a href="#question">Question</a>
+      <a href="#data">Data</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#limitations">Limitations</a>
+      <a href="#recommendations">Recommendations</a>
+      <a href="#reproducibility">Reproducibility</a>
+    </nav>
+
+  </div>
+</header>
+
+
+<main>
+
+<!-- ========================================================= -->
+<!-- HERO / ABSTRACT -->
+<!-- ========================================================= -->
+
+<section class="hero">
+
+  <div class="wrap hero-grid">
+
+    <div>
+
+      <div class="eyebrow">
+        <span class="dot"></span>
+        FlyRank Machine Learning Internship · ML-11
       </div>
-    </section>
 
-    <section id="question">
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">01 · Question</div><div><h2>Which pages deserve attention first?</h2></div></div>
-        <p class="lead">The research question is: <strong>which webpages should be prioritized for content refresh to maximize future organic search performance?</strong></p>
-        <div class="grid">
-          <div class="card"><strong>ML task</strong><small>Binary classification of forward click decline.</small></div>
-          <div class="card"><strong>Decision</strong><small>A weekly/monthly queue for a content strategist.</small></div>
-          <div class="card"><strong>Scope</strong><small>Decision support, not auto-publishing or auto-editing.</small></div>
-        </div>
-        <p>The target is <code>is_declining_forward = 1</code> when a page's total clicks in April 2026 are lower than its total clicks in March 2026. The model uses only information observable by the end of March.</p>
+      <h1>
+        Content Refresh Prioritization:
+        Predicting Forward Search Decline from March-Only Signals
+      </h1>
+
+      <p class="dek">
+        A public-safe, decision-support study asking whether signals available
+        at the end of March can help identify webpages whose organic clicks
+        decline in April.
+      </p>
+
+      <div class="meta">
+        <span class="pill">March → April 2026</span>
+        <span class="pill">Binary classification</span>
+        <span class="pill">Client-grouped validation</span>
+        <span class="pill">Human review required</span>
       </div>
-    </section>
 
-    <section id="data">
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">02 · Data</div><div><h2>A forward-looking month pair</h2></div></div>
-        <p class="lead">The analysis uses the FlyRank internship warehouse through DuckDB, with March as the feature period and April as the forward label period.</p>
-        <div class="two">
-          <div class="card">
-            <h3>Source</h3>
-            <p><strong>FlyRank/internship-warehouse</strong><br>Configuration/table: <code>fact_content_daily_performance</code></p>
-            <p>Client and content identifiers were already hashed. No client names, domains, or URLs entered the pipeline.</p>
-          </div>
-          <div class="card">
-            <h3>Windows & exclusions</h3>
-            <ul>
-              <li>March 2026 → model features</li>
-              <li>April 2026 → forward outcome only</li>
-              <li>June 2026 sample/sealed month → explicitly excluded</li>
-              <li>Rows missing either March or April → excluded rather than imputed</li>
-            </ul>
-          </div>
-        </div>
-        <div class="callout warn">
-          <p><strong>Leakage boundary.</strong> April information is never used as a model feature. March total clicks is also excluded from the final model because the label directly compares March and April click totals.</p>
-        </div>
+    </div>
+
+
+    <aside class="abstract">
+
+      <h2>Abstract</h2>
+
+      <p>
+        This study investigates whether March-only search and engagement
+        signals can identify webpages likely to experience a forward decline
+        in organic clicks, supporting human-reviewed content refresh
+        prioritization. A Random Forest classifier using five March 2026
+        features was evaluated against a fixed Week-4 rule-based baseline
+        on a client-grouped held-out split. On this March-to-April slice,
+        the model achieved a ROC-AUC of 0.953919 and Precision@10 of 1.000,
+        compared with 0.686792 and 0.700 for the baseline. Validation audits
+        showed a higher ROC-AUC of approximately 0.964 under a naive random
+        split and approximately 0.968 when March total clicks was deliberately
+        added as a leaky feature, reinforcing the need for grouped validation
+        and careful feature design. The resulting ranking is a directional
+        decision-support signal for human review, not evidence of causality,
+        guaranteed traffic recovery, or an automated content-editing system.
+      </p>
+
+    </aside>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 01 QUESTION -->
+<!-- ========================================================= -->
+
+<section id="question">
+
+  <div class="wrap">
+
+    <div class="section-head">
+      <div class="section-no">01 · Question</div>
+
+      <div>
+        <h2>Which pages deserve attention first?</h2>
       </div>
-    </section>
+    </div>
 
-    <section id="method">
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">03 · Method</div><div><h2>Simple features, strict grouping</h2></div></div>
-        <div class="two">
-          <div>
-            <h3>Five March-only features</h3>
-            <table>
-              <tr><th>Feature</th><th>Interpretation</th></tr>
-              <tr><td><code>avg_ctr</code></td><td>Aggregate clicks relative to impressions</td></tr>
-              <tr><td><code>avg_position</code></td><td>Average search position</td></tr>
-              <tr><td><code>total_impressions</code></td><td>Search exposure volume</td></tr>
-              <tr><td><code>ai_search_share</code></td><td>Share of sessions attributed to AI search</td></tr>
-              <tr><td><code>engagement_rate</code></td><td>GA4 engaged sessions relative to sessions</td></tr>
-            </table>
-          </div>
-          <div>
-            <h3>Model & validation</h3>
-            <p><strong>Random Forest Classifier</strong></p>
-            <pre>n_estimators=300
+    <p class="lead">
+      The research question is:
+      <strong>
+        which webpages should be prioritized for content refresh to maximize
+        future organic search performance?
+      </strong>
+    </p>
+
+    <div class="grid">
+
+      <div class="card">
+        <strong>ML task</strong>
+        <small>Binary classification of forward click decline.</small>
+      </div>
+
+      <div class="card">
+        <strong>Decision</strong>
+        <small>A weekly/monthly queue for a content strategist.</small>
+      </div>
+
+      <div class="card">
+        <strong>Scope</strong>
+        <small>Decision support, not auto-publishing or auto-editing.</small>
+      </div>
+
+    </div>
+
+    <p>
+      The target is
+      <code>is_declining_forward = 1</code>
+      when a page's total clicks in April 2026 are lower than its total
+      clicks in March 2026. The model uses only information observable by
+      the end of March.
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 02 DATA -->
+<!-- ========================================================= -->
+
+<section id="data">
+
+  <div class="wrap">
+
+    <div class="section-head">
+      <div class="section-no">02 · Data</div>
+
+      <div>
+        <h2>A forward-looking month pair</h2>
+      </div>
+    </div>
+
+    <p class="lead">
+      The analysis uses the FlyRank internship warehouse through DuckDB,
+      with March as the feature period and April as the forward label period.
+    </p>
+
+    <div class="two">
+
+      <div class="card">
+
+        <h3>Source</h3>
+
+        <p>
+          <strong>FlyRank/internship-warehouse</strong>
+          <br>
+          Configuration/table:
+          <code>fact_content_daily_performance</code>
+        </p>
+
+        <p>
+          Client and content identifiers were already hashed.
+          No client names, domains, or URLs entered the pipeline.
+        </p>
+
+      </div>
+
+
+      <div class="card">
+
+        <h3>Windows & exclusions</h3>
+
+        <ul>
+          <li>March 2026 → model features</li>
+          <li>April 2026 → forward outcome only</li>
+          <li>June 2026 sample/sealed month → explicitly excluded</li>
+          <li>Rows missing either March or April → excluded rather than imputed</li>
+        </ul>
+
+      </div>
+
+    </div>
+
+
+    <div class="callout warn">
+
+      <p>
+        <strong>Leakage boundary.</strong>
+        April information is never used as a model feature.
+        March total clicks is also excluded from the final model because
+        the label directly compares March and April click totals.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 03 METHOD -->
+<!-- ========================================================= -->
+
+<section id="method">
+
+  <div class="wrap">
+
+    <div class="section-head">
+
+      <div class="section-no">03 · Method</div>
+
+      <div>
+        <h2>Simple features, strict grouping</h2>
+      </div>
+
+    </div>
+
+
+    <div class="two">
+
+      <div>
+
+        <h3>Five March-only features</h3>
+
+        <table>
+
+          <tr>
+            <th>Feature</th>
+            <th>Interpretation</th>
+          </tr>
+
+          <tr>
+            <td><code>avg_ctr</code></td>
+            <td>Aggregate clicks relative to impressions</td>
+          </tr>
+
+          <tr>
+            <td><code>avg_position</code></td>
+            <td>Average search position</td>
+          </tr>
+
+          <tr>
+            <td><code>total_impressions</code></td>
+            <td>Search exposure volume</td>
+          </tr>
+
+          <tr>
+            <td><code>ai_search_share</code></td>
+            <td>Share of sessions attributed to AI search</td>
+          </tr>
+
+          <tr>
+            <td><code>engagement_rate</code></td>
+            <td>GA4 engaged sessions relative to sessions</td>
+          </tr>
+
+        </table>
+
+      </div>
+
+
+      <div>
+
+        <h3>Model & validation</h3>
+
+        <p>
+          <strong>Random Forest Classifier</strong>
+        </p>
+
+        <pre>n_estimators=300
 max_depth=5
 min_samples_leaf=10
 class_weight="balanced"
 random_state=42</pre>
-            <p>Primary validation uses <code>GroupShuffleSplit</code> with <code>client_hash_id</code> as the grouping variable and a 30% held-out test set. The audited split contained no client overlap between train and test.</p>
-          </div>
-        </div>
-        <h3>Baseline</h3>
-        <p>The fixed Week-4 rule is re-scored on the same held-out split. It is not retrained for the final comparison.</p>
+
+        <p>
+          Primary validation uses
+          <code>GroupShuffleSplit</code>
+          with <code>client_hash_id</code> as the grouping variable and a
+          30% held-out test set. The audited split contained no client overlap
+          between train and test.
+        </p>
+
       </div>
-    </section>
 
-    <section id="results">
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">04 · Results</div><div><h2>The model separates the priority signal strongly on this slice</h2></div></div>
-        <div class="grid">
-          <div class="card"><div class="metric">0.953919</div><div class="metric-label">Random Forest ROC-AUC</div></div>
-          <div class="card"><div class="metric">1.000</div><div class="metric-label">Random Forest Precision@10</div></div>
-          <div class="card"><div class="metric">0.686792</div><div class="metric-label">Week-4 baseline ROC-AUC</div></div>
-        </div>
-        <table>
-          <tr><th>System</th><th>ROC-AUC</th><th>Precision@10</th></tr>
-          <tr><td>Week-4 baseline</td><td>0.686792</td><td>0.700</td></tr>
-          <tr class="winner"><td><strong>Random Forest</strong></td><td><strong>0.953919</strong></td><td><strong>1.000</strong></td></tr>
-        </table>
-        <figure>
-          <img src="work/figures/model_vs_baseline.png" alt="Model versus Week-4 baseline comparison">
-          <figcaption>Figure 1. ROC-AUC and Precision@10 for the baseline and Random Forest on the same held-out split.</figcaption>
-        </figure>
-
-        <h3>Validation and leakage audit</h3>
-        <p>The naive random split produced approximately 0.964 ROC-AUC, compared with approximately 0.953 under the client-grouped split used for the main result. This difference is consistent with the stricter grouping requirement: pages from the same client cannot contribute to both sides of the evaluation.</p>
-        <p>A separate deliberate leakage experiment added <code>march_total_clicks</code> and produced approximately 0.968 ROC-AUC. This is <strong>not</strong> reported as model performance; it is an audit showing why the feature is excluded from the final model.</p>
-        <figure>
-          <img src="work/figures/validation_split_comparison.png" alt="Naive random split versus client-grouped split ROC-AUC">
-          <figcaption>Figure 2. Validation split comparison. The grouped split is the primary evaluation design.</figcaption>
-        </figure>
-
-        <h3>What the model appears to use</h3>
-        <p>Permutation importance shows <code>avg_ctr</code> as the dominant measured feature in this run, with a mean ROC-AUC drop of approximately 0.193 when permuted. The remaining features are much smaller in this single evaluation and should not be interpreted as universal drivers.</p>
-        <figure>
-          <img src="work/figures/permutation_importance.png" alt="Permutation feature importance">
-          <figcaption>Figure 3. Permutation importance measured on the held-out grouped test set.</figcaption>
-        </figure>
-
-        <h3>Error analysis</h3>
-        <p>The notebook's strongest evidence is the aggregate held-out evaluation and its validation/leakage audits. This artifact therefore avoids inventing page-level error narratives that are not supported by the executed outputs.</p>
-      </div>
-    </section>
-
-    <section id="limitations">
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">05 · Limitations</div><div><h2>Strong result, deliberately narrow claim</h2></div></div>
-        <div class="two">
-          <div class="card"><h3>One month pair</h3><p>The study covers March → April 2026. It does not establish behavior across seasons, other months, or future search changes.</p></div>
-          <div class="card"><h3>Not causal</h3><p>The model identifies correlated pre-decline signals. It does not prove that refreshing a page causes traffic to recover.</p></div>
-          <div class="card"><h3>Precision@10 context</h3><p>Precision@10 must be interpreted together with the held-out test-set size and the exact ranking procedure; it is not a universal guarantee.</p></div>
-          <div class="card"><h3>Not production infrastructure</h3><p>The output is a research artifact and prioritization aid. Human review remains mandatory before any content action.</p></div>
-        </div>
-        <div class="callout">
-          <p><strong>Honest framing:</strong> the measured performance is specific to this March-to-April slice and this client-grouped evaluation. It should be treated as directional evidence for prioritization rather than a guarantee of future traffic behavior.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="recommendations">
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">06 · Action Playbook</div><div><h2>Turn the score into a review queue</h2></div></div>
-        <p class="lead">The final model produces a decline probability that is converted into interpretable archetypes. The ranking is designed to help a strategist decide what to inspect first—not what the system should automatically change.</p>
-        <div class="rank"><div class="rank-num">01</div><div><h3>Declining / High-Volume</h3><p>Prioritize human review when decline probability is high and the page has meaningful search exposure. Investigate content freshness, intent alignment, SERP competition, and recent changes before deciding on a refresh.</p></div><span class="tag">REFRESH_CONTENT</span></div>
-        <div class="rank"><div class="rank-num">02</div><div><h3>Good Position / CTR Gap</h3><p>For pages already ranking in positions 1–10 but showing a below-median CTR for their position bucket, inspect titles and meta descriptions as a potential optimization opportunity.</p></div><span class="tag">OPTIMIZE_TITLE_META</span></div>
-        <div class="rank"><div class="rank-num">03</div><div><h3>Stable / Performing</h3><p>Keep the page in normal monitoring rather than spending refresh capacity immediately.</p></div><span class="tag">NO_ACTION</span></div>
-        <div class="rank"><div class="rank-num">04</div><div><h3>Low-Volume / Low-Confidence</h3><p>Treat low-impression pages cautiously. A high score on little search exposure is weaker evidence for immediate intervention.</p></div><span class="tag">MONITOR_ONLY</span></div>
-        <figure>
-          <img src="work/figures/archetype_distribution.png" alt="Distribution of recommendation archetypes">
-          <figcaption>Figure 4. Distribution of the action archetypes generated by the final scoring workflow.</figcaption>
-        </figure>
-        <div class="callout warn">
-          <p><strong>Never automated:</strong> publishing or rewriting content without human editing; deleting or deindexing pages from the score alone; acting on a single month without additional confirmation; treating low-volume pages as equally trustworthy; or using the queue as the sole input for client-facing spend or contract decisions.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="reproducibility">
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">07 · Reproducibility</div><div><h2>Everything needed to inspect the artifact</h2></div></div>
-        <div class="grid">
-          <div class="card">
-  <strong>Notebook</strong>
-  <small>
-    <a href="https://colab.research.google.com/github/GokulM8/Internship/blob/main/work/notebooks/capstone.ipynb" target="_blank" rel="noopener">
-      Open capstone.ipynb
-    </a>
-  </small>
-</div>
-
-<div class="card">
-  <strong>Metrics</strong>
-  <small>
-    <a href="work/outputs/capstone_metrics.json" target="_blank" rel="noopener">
-      Open capstone_metrics.json
-    </a>
-  </small>
-</div>
-
-<div class="card">
-  <strong>Figures</strong>
-  <small>
-    <a href="work/figures/model_vs_baseline.png" target="_blank" rel="noopener">
-      Model vs Baseline
-    </a>
-    <br>
-    <a href="work/figures/validation_split_comparison.png" target="_blank" rel="noopener">
-      Validation Split Comparison
-    </a>
-    <br>
-    <a href="work/figures/permutation_importance.png" target="_blank" rel="noopener">
-      Permutation Feature Importance
-    </a>
-    <br>
-    <a href="work/figures/archetype_distribution.png" target="_blank" rel="noopener">
-      Archetype Distribution
-    </a>
-  </small>
-</div>
-        </div>
-        <p>The repository contains the executed capstone notebook, generated figures, and machine-readable metrics used to build this page. The analysis uses the public-safe, pre-hashed warehouse identifiers supplied by the internship dataset.</p>
-        <h3>Evaluation recipe</h3>
-        <ol>
-          <li>Aggregate March 2026 page-level signals.</li>
-          <li>Join April 2026 totals only to construct the forward label.</li>
-          <li>Split by <code>client_hash_id</code> with a 30% held-out group.</li>
-          <li>Train the specified Random Forest on the five March-only features.</li>
-          <li>Compare against the fixed baseline on the identical held-out rows.</li>
-          <li>Run the split and leakage audits and preserve the generated artifacts.</li>
-        </ol>
-      </div>
-    </section>
-
-    <section>
-      <div class="wrap">
-        <div class="section-head"><div class="section-no">08 · Credit</div><div><h2>Acknowledgments & data credit</h2></div></div>
-        <p class="lead"><strong>Built on the FlyRank ML Internship dataset.</strong></p>
-        <p>Data and internship context are credited to <a href="https://flyrank.ai" rel="noopener noreferrer">FlyRank</a>. This page intentionally omits client names, domains, URLs, and private search queries.</p>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="wrap">
-      <strong>Content Refresh Prioritization</strong> · FlyRank ML-11 research artifact<br>
-      Directional decision support for human review · March → April 2026
     </div>
-  </footer>
+
+
+    <h3>Baseline</h3>
+
+    <p>
+      The fixed Week-4 rule is re-scored on the same held-out split.
+      It is not retrained for the final comparison.
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 04 RESULTS -->
+<!-- ========================================================= -->
+
+<section id="results">
+
+  <div class="wrap">
+
+    <div class="section-head">
+
+      <div class="section-no">04 · Results</div>
+
+      <div>
+        <h2>
+          The model separates the priority signal strongly on this slice
+        </h2>
+      </div>
+
+    </div>
+
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="metric">0.953919</div>
+        <div class="metric-label">Random Forest ROC-AUC</div>
+      </div>
+
+      <div class="card">
+        <div class="metric">1.000</div>
+        <div class="metric-label">Random Forest Precision@10</div>
+      </div>
+
+      <div class="card">
+        <div class="metric">0.686792</div>
+        <div class="metric-label">Week-4 baseline ROC-AUC</div>
+      </div>
+
+    </div>
+
+
+    <table>
+
+      <tr>
+        <th>System</th>
+        <th>ROC-AUC</th>
+        <th>Precision@10</th>
+      </tr>
+
+      <tr>
+        <td>Week-4 baseline</td>
+        <td>0.686792</td>
+        <td>0.700</td>
+      </tr>
+
+      <tr class="winner">
+        <td><strong>Random Forest</strong></td>
+        <td><strong>0.953919</strong></td>
+        <td><strong>1.000</strong></td>
+      </tr>
+
+    </table>
+
+
+    <figure>
+
+      <img
+        src="https://gokulm8.github.io/Internship/work/figures/model_vs_baseline.png"
+        alt="Model versus Week-4 baseline comparison"
+      >
+
+      <figcaption>
+        Figure 1. ROC-AUC and Precision@10 for the baseline and Random Forest
+        on the same held-out split.
+      </figcaption>
+
+    </figure>
+
+
+    <h3>Validation and leakage audit</h3>
+
+    <p>
+      The naive random split produced approximately 0.964 ROC-AUC,
+      compared with approximately 0.953 under the client-grouped split
+      used for the main result. This difference is consistent with the
+      stricter grouping requirement: pages from the same client cannot
+      contribute to both sides of the evaluation.
+    </p>
+
+    <p>
+      A separate deliberate leakage experiment added
+      <code>march_total_clicks</code>
+      and produced approximately 0.968 ROC-AUC. This is
+      <strong>not</strong> reported as model performance; it is an audit
+      showing why the feature is excluded from the final model.
+    </p>
+
+
+    <figure>
+
+      <img
+        src="https://gokulm8.github.io/Internship/work/figures/validation_split_comparison.png"
+        alt="Naive random split versus client-grouped split ROC-AUC"
+      >
+
+      <figcaption>
+        Figure 2. Validation split comparison.
+        The grouped split is the primary evaluation design.
+      </figcaption>
+
+    </figure>
+
+
+    <h3>What the model appears to use</h3>
+
+    <p>
+      Permutation importance shows
+      <code>avg_ctr</code>
+      as the dominant measured feature in this run, with a mean ROC-AUC
+      drop of approximately 0.193 when permuted. The remaining features
+      are much smaller in this single evaluation and should not be
+      interpreted as universal drivers.
+    </p>
+
+
+    <figure>
+
+      <img
+        src="https://gokulm8.github.io/Internship/work/figures/permutation_importance.png"
+        alt="Permutation feature importance"
+      >
+
+      <figcaption>
+        Figure 3. Permutation importance measured on the held-out
+        grouped test set.
+      </figcaption>
+
+    </figure>
+
+
+    <h3>Error analysis</h3>
+
+    <p>
+      The notebook's strongest evidence is the aggregate held-out
+      evaluation and its validation/leakage audits. This artifact therefore
+      avoids inventing page-level error narratives that are not supported
+      by the executed outputs.
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 05 LIMITATIONS -->
+<!-- ========================================================= -->
+
+<section id="limitations">
+
+  <div class="wrap">
+
+    <div class="section-head">
+
+      <div class="section-no">05 · Limitations</div>
+
+      <div>
+        <h2>Strong result, deliberately narrow claim</h2>
+      </div>
+
+    </div>
+
+
+    <div class="two">
+
+      <div class="card">
+        <h3>One month pair</h3>
+
+        <p>
+          The study covers March → April 2026.
+          It does not establish behavior across seasons, other months,
+          or future search changes.
+        </p>
+      </div>
+
+
+      <div class="card">
+        <h3>Not causal</h3>
+
+        <p>
+          The model identifies correlated pre-decline signals.
+          It does not prove that refreshing a page causes traffic to recover.
+        </p>
+      </div>
+
+
+      <div class="card">
+        <h3>Precision@10 context</h3>
+
+        <p>
+          Precision@10 must be interpreted together with the held-out
+          test-set size and the exact ranking procedure; it is not a
+          universal guarantee.
+        </p>
+      </div>
+
+
+      <div class="card">
+        <h3>Not production infrastructure</h3>
+
+        <p>
+          The output is a research artifact and prioritization aid.
+          Human review remains mandatory before any content action.
+        </p>
+      </div>
+
+    </div>
+
+
+    <div class="callout">
+
+      <p>
+        <strong>Honest framing:</strong>
+        the measured performance is specific to this March-to-April slice
+        and this client-grouped evaluation. It should be treated as
+        directional evidence for prioritization rather than a guarantee
+        of future traffic behavior.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 06 RECOMMENDATIONS -->
+<!-- ========================================================= -->
+
+<section id="recommendations">
+
+  <div class="wrap">
+
+    <div class="section-head">
+
+      <div class="section-no">06 · Action Playbook</div>
+
+      <div>
+        <h2>Turn the score into a review queue</h2>
+      </div>
+
+    </div>
+
+
+    <p class="lead">
+      The final model produces a decline probability that is converted
+      into interpretable archetypes. The ranking is designed to help a
+      strategist decide what to inspect first—not what the system should
+      automatically change.
+    </p>
+
+
+    <div class="rank">
+
+      <div class="rank-num">01</div>
+
+      <div>
+        <h3>Declining / High-Volume</h3>
+
+        <p>
+          Prioritize human review when decline probability is high and
+          the page has meaningful search exposure. Investigate content
+          freshness, intent alignment, SERP competition, and recent
+          changes before deciding on a refresh.
+        </p>
+      </div>
+
+      <span class="tag">REFRESH_CONTENT</span>
+
+    </div>
+
+
+    <div class="rank">
+
+      <div class="rank-num">02</div>
+
+      <div>
+        <h3>Good Position / CTR Gap</h3>
+
+        <p>
+          For pages already ranking in positions 1–10 but showing a
+          below-median CTR for their position bucket, inspect titles and
+          meta descriptions as a potential optimization opportunity.
+        </p>
+      </div>
+
+      <span class="tag">OPTIMIZE_TITLE_META</span>
+
+    </div>
+
+
+    <div class="rank">
+
+      <div class="rank-num">03</div>
+
+      <div>
+        <h3>Stable / Performing</h3>
+
+        <p>
+          Keep the page in normal monitoring rather than spending
+          refresh capacity immediately.
+        </p>
+      </div>
+
+      <span class="tag">NO_ACTION</span>
+
+    </div>
+
+
+    <div class="rank">
+
+      <div class="rank-num">04</div>
+
+      <div>
+        <h3>Low-Volume / Low-Confidence</h3>
+
+        <p>
+          Treat low-impression pages cautiously. A high score on little
+          search exposure is weaker evidence for immediate intervention.
+        </p>
+      </div>
+
+      <span class="tag">MONITOR_ONLY</span>
+
+    </div>
+
+
+    <figure>
+
+      <img
+        src="https://gokulm8.github.io/Internship/work/figures/archetype_distribution.png"
+        alt="Distribution of recommendation archetypes"
+      >
+
+      <figcaption>
+        Figure 4. Distribution of the action archetypes generated by
+        the final scoring workflow.
+      </figcaption>
+
+    </figure>
+
+
+    <div class="callout warn">
+
+      <p>
+        <strong>Never automated:</strong>
+        publishing or rewriting content without human editing; deleting
+        or deindexing pages from the score alone; acting on a single month
+        without additional confirmation; treating low-volume pages as
+        equally trustworthy; or using the queue as the sole input for
+        client-facing spend or contract decisions.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 07 REPRODUCIBILITY -->
+<!-- ========================================================= -->
+
+<section id="reproducibility">
+
+  <div class="wrap">
+
+    <div class="section-head">
+
+      <div class="section-no">07 · Reproducibility</div>
+
+      <div>
+        <h2>Everything needed to inspect the artifact</h2>
+      </div>
+
+    </div>
+
+
+    <div class="grid">
+
+
+      <!-- NOTEBOOK -->
+
+      <div class="card">
+
+        <strong>Notebook</strong>
+
+        <small>
+
+          <a
+            class="artifact-link"
+            href="https://colab.research.google.com/github/GokulM8/Internship/blob/main/work/notebooks/capstone.ipynb"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ▶ Open capstone.ipynb in Google Colab
+          </a>
+
+
+          <a
+            class="artifact-link"
+            href="https://github.com/GokulM8/Internship/blob/main/work/notebooks/capstone.ipynb"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ↗ View notebook source on GitHub
+          </a>
+
+        </small>
+
+      </div>
+
+
+      <!-- METRICS -->
+
+      <div class="card">
+
+        <strong>Metrics</strong>
+
+        <small>
+
+          <a
+            class="artifact-link"
+            href="https://gokulm8.github.io/Internship/work/outputs/capstone_metrics.json"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open capstone_metrics.json
+          </a>
+
+
+          <a
+            class="artifact-link"
+            href="https://github.com/GokulM8/Internship/blob/main/work/outputs/capstone_metrics.json"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View metrics on GitHub
+          </a>
+
+        </small>
+
+      </div>
+
+
+      <!-- FIGURES -->
+
+      <div class="card">
+
+        <strong>Figures</strong>
+
+        <small>
+
+          <a
+            class="artifact-link"
+            href="https://gokulm8.github.io/Internship/work/figures/model_vs_baseline.png"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Model vs Baseline
+          </a>
+
+
+          <a
+            class="artifact-link"
+            href="https://gokulm8.github.io/Internship/work/figures/validation_split_comparison.png"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Validation Split Comparison
+          </a>
+
+
+          <a
+            class="artifact-link"
+            href="https://gokulm8.github.io/Internship/work/figures/permutation_importance.png"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Permutation Feature Importance
+          </a>
+
+
+          <a
+            class="artifact-link"
+            href="https://gokulm8.github.io/Internship/work/figures/archetype_distribution.png"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Archetype Distribution
+          </a>
+
+        </small>
+
+      </div>
+
+
+    </div>
+
+
+    <p>
+      The repository contains the executed capstone notebook, generated
+      figures, and machine-readable metrics used to build this page.
+      The analysis uses the public-safe, pre-hashed warehouse identifiers
+      supplied by the internship dataset.
+    </p>
+
+
+    <h3>Evaluation recipe</h3>
+
+    <ol>
+
+      <li>
+        Aggregate March 2026 page-level signals.
+      </li>
+
+      <li>
+        Join April 2026 totals only to construct the forward label.
+      </li>
+
+      <li>
+        Split by <code>client_hash_id</code> with a 30% held-out group.
+      </li>
+
+      <li>
+        Train the specified Random Forest on the five March-only features.
+      </li>
+
+      <li>
+        Compare against the fixed baseline on the identical held-out rows.
+      </li>
+
+      <li>
+        Run the split and leakage audits and preserve the generated artifacts.
+      </li>
+
+    </ol>
+
+  </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- 08 ACKNOWLEDGMENTS -->
+<!-- ========================================================= -->
+
+<section>
+
+  <div class="wrap">
+
+    <div class="section-head">
+
+      <div class="section-no">08 · Credit</div>
+
+      <div>
+        <h2>Acknowledgments & data credit</h2>
+      </div>
+
+    </div>
+
+
+    <p class="lead">
+      <strong>Built on the FlyRank ML Internship dataset.</strong>
+    </p>
+
+
+    <p>
+      Data and internship context are credited to
+      <a
+        href="https://flyrank.ai"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        FlyRank
+      </a>.
+      This page intentionally omits client names, domains, URLs,
+      and private search queries.
+    </p>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<!-- ========================================================= -->
+<!-- FOOTER -->
+<!-- ========================================================= -->
+
+<footer class="footer">
+
+  <div class="wrap">
+
+    <strong>Content Refresh Prioritization</strong>
+    · FlyRank ML-11 research artifact
+
+    <br>
+
+    Directional decision support for human review
+    · March → April 2026
+
+    <br><br>
+
+    <a
+      href="https://github.com/GokulM8/Internship"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      GitHub Repository
+    </a>
+
+    ·
+
+    <a
+      href="https://colab.research.google.com/github/GokulM8/Internship/blob/main/work/notebooks/capstone.ipynb"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Open Notebook in Colab
+    </a>
+
+  </div>
+
+</footer>
+
 </body>
 </html>
